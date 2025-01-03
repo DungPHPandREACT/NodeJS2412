@@ -6,6 +6,8 @@
 // Năm xuất bản: (số nguyên) Năm xuất bản của sách.
 // Số trang: (số nguyên) Số trang của sách.
 
+import { Author } from "../../author/dto/author.dto";
+
 enum CATEGORY {
     NOVEL = 'NOVEL',
     SCIENCE = 'SCIENCE',
@@ -15,7 +17,7 @@ enum CATEGORY {
 export interface Book {
     id ?: number | string;
     title: string;
-    author: number | string;
+    author: number | string | Author;
     category: CATEGORY;
     publishedYear: number;
     numberOfPages: number;

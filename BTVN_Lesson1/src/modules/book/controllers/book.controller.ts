@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { books } from '../models/book.model';
+import { authors } from '../../author/models/author.model';
+import { Author } from '../../author/dto/author.dto';
 // Thêm sách: Cho phép thêm một sách mới vào hệ thống, bao gồm cả thông tin về tác giả.
 export const addBook = (req: Request, res: Response): any => {
 	const { title, author, category, publishedYear, numberOfPages } = req.body;
@@ -10,6 +12,15 @@ export const addBook = (req: Request, res: Response): any => {
 			message: 'Vui lòng nhập đầy đủ thông tin',
 		});
 	}
+
+    // Xác minh tác giả
+    const index = authors.findIndex((element) => element.id == author);
+
+    if(index === -1){
+        return res.status(400).json({
+			message: 'Vui lòng nhập đúng thông tin tác giả',
+		});
+    }
 
 	const newBook = {
 		id: uuidv4(),
@@ -29,8 +40,14 @@ export const addBook = (req: Request, res: Response): any => {
 };
 // Lấy danh sách sách: Hiển thị danh sách tất cả các sách kèm theo thông tin tác giả.
 export const getBooks = (req: Request, res: Response) => {
+    const result = books.map((book) => {
+        const author = authors.find((element) => element.id == book.author);
+
+        return {...book, author: author}
+    })
+
 	res.status(200).json({
-		data: books,
+		data: result,
 	});
 };
 // Lấy chi tiết sách: Hiển thị thông tin cụ thể của 1 cuốn sách.
@@ -38,7 +55,11 @@ export const getBook = (req: Request, res: Response) => {
 	const { id } = req.params;
 
 	const book = books.find((element) => element.id == id);
+
 	if (book) {
+        const author = authors.find((element) => element.id == book.author);
+        book.author = author as Author;
+
 		res.status(200).json({
 			data: book,
 		});
