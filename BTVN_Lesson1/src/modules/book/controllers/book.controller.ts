@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { books } from '../models/book.model';
-import { authors } from '../../author/models/author.model';
 import { Author } from '../../author/dto/author.dto';
+import { authors } from '../../author/models/author.model';
+import { books } from '../models/book.model';
 // Thêm sách: Cho phép thêm một sách mới vào hệ thống, bao gồm cả thông tin về tác giả.
 export const addBook = (req: Request, res: Response): any => {
 	const { title, author, category, publishedYear, numberOfPages } = req.body;
@@ -13,14 +13,14 @@ export const addBook = (req: Request, res: Response): any => {
 		});
 	}
 
-    // Xác minh tác giả
-    const index = authors.findIndex((element) => element.id == author);
+	// Xác minh tác giả
+	const index = authors.findIndex((element) => element.id == author);
 
-    if(index === -1){
-        return res.status(400).json({
+	if (index === -1) {
+		return res.status(400).json({
 			message: 'Vui lòng nhập đúng thông tin tác giả',
 		});
-    }
+	}
 
 	const newBook = {
 		id: uuidv4(),
@@ -40,11 +40,26 @@ export const addBook = (req: Request, res: Response): any => {
 };
 // Lấy danh sách sách: Hiển thị danh sách tất cả các sách kèm theo thông tin tác giả.
 export const getBooks = (req: Request, res: Response) => {
-    const result = books.map((book) => {
-        const author = authors.find((element) => element.id == book.author);
+	const category = req.query.category; //nếu không thì sẽ là undefined
+	const title = req.query.title as string; //nếu không thì sẽ là undefined
 
-        return {...book, author: author}
-    })
+	const result = books
+		.filter((book) => {
+			let condition1 = true,
+				condition2 = true;
+			if (category) {
+				condition1 = book.category == category;
+			}
+			if (title) {
+				condition2 = book.title.toLowerCase().includes(title.toLowerCase());
+			}
+			return condition1 && condition2;
+		})
+		.map((book) => {
+			const author = authors.find((element) => element.id == book.author);
+
+			return { ...book, author: author };
+		});
 
 	res.status(200).json({
 		data: result,
@@ -57,8 +72,8 @@ export const getBook = (req: Request, res: Response) => {
 	const book = books.find((element) => element.id == id);
 
 	if (book) {
-        const author = authors.find((element) => element.id == book.author);
-        book.author = author as Author;
+		const author = authors.find((element) => element.id == book.author);
+		book.author = author as Author;
 
 		res.status(200).json({
 			data: book,
