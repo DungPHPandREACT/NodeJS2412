@@ -1,11 +1,14 @@
 import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import { body, validationResult } from 'express-validator';
+import Queue from 'bull'
 
 const app = express();
 app.use(express.json());
 
 const PORT = 8080;
+
+const emailQueue = new Queue('emailQueue');
 
 const schema = Joi.object({
 	username: Joi.string().min(2).max(30).required().messages({
@@ -26,12 +29,21 @@ app.post('/api/v1/auth/register', (req: Request, res: Response) => {
 		res.status(400).json({
 			error: error.details[0].message,
 		});
+
+        return;
 	}
+
+    emailQueue.add({email: info.email})
 
 	res.status(200).json({
 		message: 'Đăng ký thành công',
 	});
 });
+
+emailQueue.process(async (job) => {
+    const email = job.data.email;
+    console.log(`Đã gửi email tới ${email}`)
+})
 
 const validator = [
     body('email').notEmpty().withMessage('email là trường bắt buộc')
