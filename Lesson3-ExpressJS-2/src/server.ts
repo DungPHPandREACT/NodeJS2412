@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { body, validationResult } from 'express-validator';
 import Queue from 'bull'
 import cron from 'node-cron';
+import rateLimit from "express-rate-limit"
 
 const app = express();
 app.use(express.json());
@@ -10,6 +11,15 @@ app.use(express.json());
 const PORT = 8080;
 
 const emailQueue = new Queue('emailQueue');
+
+const limiter = rateLimit({
+	windowMs: 60 * 1000,
+	max: 5,
+	message: 'Bạn đã thực hiện quá nhiều request trong 1 phút. Vui lòng thử lại sau 1 phút',
+	headers: true
+})
+
+app.use(limiter)
 
 const schema = Joi.object({
 	username: Joi.string().min(2).max(30).required().messages({
