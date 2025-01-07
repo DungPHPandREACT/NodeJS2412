@@ -43,6 +43,8 @@ export const getBooks = (req: Request, res: Response) => {
 	const category = req.query.category; //nếu không thì sẽ là undefined
 	const title = req.query.title as string; //nếu không thì sẽ là undefined
 
+
+    // slice để tạo ra một bản sao mới của mảng
 	const result = books
 		.filter((book) => {
 			let condition1 = true,
