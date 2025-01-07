@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import { body, validationResult } from 'express-validator';
 import Queue from 'bull'
+import cron from 'node-cron';
 
 const app = express();
 app.use(express.json());
@@ -64,6 +65,10 @@ app.post('/api/v1/auth/login',validator, (req: Request, res: Response) => {
 	res.status(200).json({
 		message: 'Login thành công',
 	});
+});
+
+cron.schedule('*/2 * * * *', () => {
+	console.log('Cron job đang được chạy')
 });
 
 app.listen(PORT, () => {
