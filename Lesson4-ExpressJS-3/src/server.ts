@@ -1,9 +1,12 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session'
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(session({
 	secret: 'your_secret_key',
@@ -32,7 +35,7 @@ app.get('/login', (req: Request, res: Response) => {
 })
 
 
-app.get('/profile', (req: Request, res: Response) => {
+app.get('/profile', (req: Request, res: Response, next: NextFunction) => {
 	if(req.session.user){
 		res.json({
 			message: 'Thông tin người dùng',
