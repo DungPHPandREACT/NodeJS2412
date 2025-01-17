@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import coursesRouter from './routes/course.route';
+import usersRouter from './routes/user.route';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ const connectDB = async () => {
 
 app.use(express.json())
 app.use('/api/courses', coursesRouter);
+app.use('/api/users', usersRouter);
 
 app.listen(PORT, () => {
 	console.log('Server is running on port', PORT);
