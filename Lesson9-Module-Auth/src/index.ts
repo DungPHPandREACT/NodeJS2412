@@ -1,21 +1,69 @@
+import bcrypt from 'bcrypt';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from './configs/auth.config';
-import { authenticateToken } from './middlewares/auth.middle';
+import { authenticateToken } from './middlewares/authentication.middleware';
+import { authorizeAttribute, authorizeRoles } from './middlewares/authorziration.middleware';
 
 const app = express();
 app.use(express.json());
+
+app.post('/register', async (req: Request, res: Response) => {
+	const { password } = req.body;
+	const saltRounds = 10;
+
+	const hashedPassword = await bcrypt.hash(password, saltRounds);
+	console.log('Mật khẩu đã mã hóa:', hashedPassword);
+
+	const isEqual = await bcrypt.compare(
+		'123456',
+		'$2b$10$6lscjnBi8koIqwiZt1XfSufhIijD/kTcTywlG1N.uSqcF6Xnnz/1m'
+	);
+
+	res.json({
+		password,
+		hashedPassword,
+		equal: isEqual,
+	});
+});
 
 const PORT = 3000;
 
 const refreshTokens: string[] = [];
 const backListTokens: string[] = [];
 
+app.post(
+	'/user',
+	authenticateToken,
+	authorizeRoles('user', 'admin'),
+	authorizeAttribute,
+	(req: any, res: Response) => {
+		res.json({
+			message: 'Đây là api dành cho user',
+			user: req?.user,
+		});
+	}
+);
+
+app.post(
+	'/admin',
+	authenticateToken,
+	authorizeRoles('admin'),
+	(req: any, res: Response) => {
+		res.json({
+			message: 'Đây là api dành cho admin',
+			user: req?.user,
+		});
+	}
+);
+
 app.post('/login', (req: Request, res: Response) => {
-	const { username, password } = req.body;
+	const { username, password, role, age } = req.body;
 	if (username === 'user1' && password === 'pass123') {
 		const payload = {
 			username,
+			role,
+			age,
 		};
 		const token = jwt.sign(payload, SECRET_KEY, {
 			expiresIn: '1h',
@@ -84,10 +132,10 @@ app.post('/logout', (req: any, res: Response) => {
 });
 
 app.get('/protected', authenticateToken, (req: any, res: any) => {
-	if(backListTokens.includes(req.token)){
+	if (backListTokens.includes(req.token)) {
 		return res.status(403).json({
-			message: 'Token đã bị thu hồi'
-		})
+			message: 'Token đã bị thu hồi',
+		});
 	}
 	res.json({
 		message: 'Đây là api được bảo vệ',
