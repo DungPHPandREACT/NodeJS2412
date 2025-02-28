@@ -23,6 +23,7 @@ export const authenticateToken = (
 			res.status(403).json({ message: 'Token không hợp lệ' });
 		} else {
             req.user = payload ?? {};
+			req.token = token;
             next();
         }
 	});
