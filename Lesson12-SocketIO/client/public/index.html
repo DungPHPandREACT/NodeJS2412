@@ -7,12 +7,20 @@
 		<script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
 	</head>
 	<body>
-		<h1>Chọn Namespace</h1>
-		<button id="connect-chat">Tham gia Chat</button>
-		<button id="connect-sports">Tham gia Sports</button>
-		<h2 id="namespace-title">Namespace</h2>
-		<input id="message" type="text" placeholder="Nhập tin nhắn..." />
-		<button id="send">Gửi</button>
+		<h1>Chat với Middleware xác thực</h1>
+		<h2>Trạng thái:<span id="status"> Chưa kết nối </span></h2>
+		<div>
+			<input id="name" type="text" placeholder="Nhập tên..." />
+			<button id="create-token">Tạo token</button>
+		</div>
+		<div>
+			<input id="token" type="text" placeholder="Nhập token..." />
+			<button id="connect">Kết nối</button>
+		</div>
+		<div>
+			<input id="message" type="text" placeholder="Nhập tin nhắn..." />
+			<button id="send">Gửi tin nhắn</button>
+		</div>
 		<ul id="messages"></ul>
 		<script src="main.js"></script>
 	</body>

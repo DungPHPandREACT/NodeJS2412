@@ -1,51 +1,53 @@
-import express from 'express';
+import cors from 'cors';
+import express, { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
+import { ALLOWED_ORIGINS, PORT, RATE_LIMIT_MAX } from './config';
+import { authMiddleware } from './middlewares/auth.middleware';
+import { CustomSocket } from './types/socket.type';
+import { createToken } from './utils/createToken';
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
+app.use(express.json());
+
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
 	cors: {
-		origin: 'http://localhost:3000',
-		methods: ['GET', 'POST'],
+		origin: ALLOWED_ORIGINS,
 	},
 });
 
-const chatNamespace = io.of('/chat');
-chatNamespace.on('connection', (socket: Socket) => {
-	console.log(` Người dùng kết nối đến /chat: ${socket.id}`);
+io.use(authMiddleware);
 
+io.on('connection', (socket: Socket) => {
+	const user = (socket as CustomSocket).user;
+	console.log(`User connected: ${user.name}`);
 	socket.on('message', (msg: string) => {
-		console.log(`[Chat] Tin nhắn từ ${socket.id}: ${msg}`);
-		chatNamespace.emit(
-			'message',
-			` Người dùng ${socket.id} trong /chat: ${msg}`
-		);
-	});
+		console.log('msg: ', msg)
 
-	socket.on('disconnect', () => {
-		console.log(` Người dùng ngắt kết nối từ /chat: ${socket.id}`);
+		socket.broadcast.emit('message', msg, user.name);
 	});
 });
 
-const sportsNameSpace = io.of('/sports');
-sportsNameSpace.on('connection', (socket: Socket) => {
-	console.log(` Người dùng kết nối đến /sports: ${socket.id}`);
+app.use(cors({ origin: ALLOWED_ORIGINS }));
+app.use(helmet());
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: RATE_LIMIT_MAX,
+	message: 'Too many request from this IP, please try again later',
+});
+app.use(limiter);
 
-	socket.on('message', (msg: string) => {
-		console.log(`[Sports] Tin nhắn từ ${socket.id}: ${msg}`);
-		sportsNameSpace.emit(
-			'message',
-			` Người dùng ${socket.id} trong /sports: ${msg}`
-		);
-	});
+app.post('/get-token', (req: Request, res: Response) => {
+	const { name } = req.body;
+	const token = createToken(name);
 
-	socket.on('disconnect', () => {
-		console.log(` Người dùng ngắt kết nối từ /sports: ${socket.id}`);
-	});
+	res.json({ token });
 });
 
-const PORT = 3001;
-server.listen(PORT, () => {
+httpServer.listen(PORT, () => {
 	console.log(`Server đang được chạy trên http://localhost:${PORT}`);
 });
