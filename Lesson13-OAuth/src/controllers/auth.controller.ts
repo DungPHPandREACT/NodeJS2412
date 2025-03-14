@@ -1,15 +1,16 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import User from '../models/user.model';
 import generateToken from '../utils/generateToken';
 import { comparePassword } from '../utils/hashPassword';
 
-export const googleAuth = (req: Request, res: Response) => {
-	passport.authenticate('google', { scope: ['profile', 'email'] })(req, res);
+export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
+	passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 };
 
-export const googleCallback = (req: Request, res: Response) => {
+export const googleCallback = (req: Request, res: Response, next: NextFunction) => {
+	
 	passport.authenticate(
 		'google',
 		{ failureRedirect: '/' },
@@ -28,7 +29,7 @@ export const googleCallback = (req: Request, res: Response) => {
 				message: 'User not found',
 			});
 		}
-	);
+	)(req, res, next);
 };
 
 export const emailLogin = async (req: Request, res: Response): Promise<any> => {
